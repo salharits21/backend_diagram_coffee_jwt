@@ -44,35 +44,36 @@ class AuthController extends Controller
     // Fitur Login
     public function login(LoginRequest $request)
     {
-        $remember = $request->boolean('remember_me');
+        $user = User::where('email', $request->email)->first();
 
-        if ($remember) {
-            Auth::guard('web')->setRememberDuration(config('auth.remember', 20160)); // 14 hari
-        }
-
-        if (Auth::attempt($request->only('email', 'password'), $remember)) {
-            $request->session()->regenerate(); // Mencegah Session Fixation
-
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'success' => true,
-                'message' => 'Login berhasil',
-                'data' => Auth::user()
-            ], 200);
+                'success' => false,
+                'message' => 'Email atau password salah'
+            ], 401);
         }
+
+        $remember = $request->boolean('remember_me');
+        // Jika remember me, token expired 14 hari (20160 menit). Jika tidak, expired dalam 2 jam.
+        $expiresAt = $remember ? now()->addMinutes(config('auth.remember', 20160)) : now()->addHours(2);
+
+        $token = $user->createToken('auth_token', ['*'], $expiresAt)->plainTextToken;
 
         return response()->json([
-            'success' => false,
-            'message' => 'Email atau password salah'
-        ], 401);
+            'success' => true,
+            'message' => 'Login berhasil',
+            'data' => [
+                'user' => $user,
+                'access_token' => $token,
+                'token_type' => 'Bearer'
+            ]
+        ], 200);
     }
 
     // Fitur Logout
     public function logout(Request $request)
     {
-        Auth::guard('web')->logout();
-        
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'success' => true,

@@ -73,7 +73,7 @@ Registrasi akun customer baru. Mengirim email verifikasi otomatis.
 
 ### `POST /login` 🌐
 
-Login menggunakan email dan password (session-based).
+Login menggunakan email dan password (stateless / token-based).
 
 **Body:**
 ```json
@@ -89,7 +89,11 @@ Login menggunakan email dan password (session-based).
 {
   "success": true,
   "message": "Login berhasil",
-  "data": { "id": 1, "name": "...", "email": "...", "role": "customer", ... }
+  "data": {
+    "user": { "id": 1, "name": "...", "email": "...", "role": "customer", ... },
+    "access_token": "1|abc...",
+    "token_type": "Bearer"
+  }
 }
 ```
 
@@ -102,9 +106,9 @@ Login menggunakan email dan password (session-based).
 
 ### `POST /logout` 👤🔧👑
 
-Logout dan hapus sesi.
+Logout dan hapus token yang sedang digunakan.
 
-**Headers:** `Cookie: laravel_session=...`
+**Headers:** `Authorization: Bearer <access_token>`
 
 **Response `200`:**
 ```json

@@ -12,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->statefulApi();
+        // $middleware->statefulApi(); // Disabled for stateless Token Based Auth
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'internal_api' => \App\Http\Middleware\InternalApiAuth::class,
